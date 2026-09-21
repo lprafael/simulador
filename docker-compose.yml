@@ -1,0 +1,118 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgis/postgis:15-3.3
+    container_name: simulador_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-simulador}
+      POSTGRES_USER: ${POSTGRES_USER:-simulador}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-simulador123}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./backend/db/init.sql:/docker-entrypoint-initdb.d/01_init.sql
+      - ./backend/db/seed_data.sql:/docker-entrypoint-initdb.d/02_seed.sql
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-simulador}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - simulador_net
+
+  redis:
+    image: redis:7-alpine
+    container_name: simulador_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - simulador_net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: simulador_backend
+    env_file:
+      - .env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8001:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - ./backend:/app
+    networks:
+      - simulador_net
+    # En producción usamos gunicorn con múltiples workers uvicorn
+    command: gunicorn main:app -c gunicorn.conf.py
+
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: simulador_worker
+    env_file:
+      - .env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - ./backend:/app
+    networks:
+      - simulador_net
+    command: celery -A celery_app worker --loglevel=info -Q celery,periodic
+
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: simulador_beat
+    env_file:
+      - .env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_started
+    volumes:
+      - ./backend:/app
+    networks:
+      - simulador_net
+    command: celery -A celery_app beat --loglevel=info
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: simulador_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      VITE_API_URL: http://localhost:8001
+      VITE_WS_URL: ws://localhost:8001
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - simulador_net
+    command: npm run dev -- --host 0.0.0.0 --port 3000
+
+volumes:
+  db_data:
+
+networks:
+  simulador_net:
+    driver: bridge

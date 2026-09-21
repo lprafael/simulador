@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guía Integral de Funcionalidades — Simulador de Tránsito y Transporte (SIGT)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0f1e;
+      --bg-secondary: #0f172a;
+      --bg-card: rgba(17, 24, 39, 0.85);
+      --bg-card-hover: rgba(30, 41, 59, 0.9);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(59, 130, 246, 0.35);
+      
+      --accent-blue: #3b82f6;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-violet: #8b5cf6;
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-subtle: #64748b;
+      
+      --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      font-family: var(--font-main);
+      line-height: 1.65;
+      padding: 40px 20px;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 10% 10%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 90%, rgba(6, 182, 212, 0.08) 0%, transparent 40%);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* HEADER */
+    .header {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.8));
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 36px 40px;
+      margin-bottom: 36px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .header::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan), var(--accent-emerald));
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      margin-bottom: 14px;
+    }
+
+    .badge-primary {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .badge-emerald {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-amber {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .badge-rose {
+      background: rgba(244, 63, 94, 0.15);
+      color: #fb7185;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #ffffff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      max-width: 900px;
+    }
+
+    /* NAV PILLS */
+    .nav-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 36px;
+    }
+
+    .nav-pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .nav-pill:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-main);
+      border-color: var(--border-glow);
+      transform: translateY(-2px);
+    }
+
+    /* GRID & SECTIONS */
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-title::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 22px;
+      background: var(--accent-blue);
+      border-radius: 2px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 24px;
+      margin-bottom: 36px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 20px;
+      margin-bottom: 36px;
+    }
+
+    /* CARDS */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 26px;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .card:hover {
+      border-color: var(--border-glow);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+      transform: translateY(-3px);
+    }
+
+    .card h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+    }
+
+    ul.feature-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    ul.feature-list li {
+      font-size: 0.88rem;
+      color: #cbd5e1;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    ul.feature-list li::before {
+      content: '✓';
+      color: var(--accent-emerald);
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    /* FORMULA BOX */
+    .formula-box {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px dashed rgba(59, 130, 246, 0.3);
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #38bdf8;
+      margin: 14px 0;
+      overflow-x: auto;
+    }
+
+    /* TABLE */
+    .table-container {
+      overflow-x: auto;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      margin-bottom: 36px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      text-align: left;
+    }
+
+    th {
+      background: rgba(30, 41, 59, 0.6);
+      color: var(--text-main);
+      padding: 16px;
+      font-weight: 700;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    td {
+      padding: 14px 16px;
+      color: #cbd5e1;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* FOOTER */
+    .footer {
+      border-top: 1px solid var(--border-color);
+      padding-top: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      color: var(--text-subtle);
+      font-size: 0.85rem;
+    }
+
+    .btn-print {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-print:hover {
+      border-color: var(--accent-blue);
+      background: var(--bg-card-hover);
+    }
+
+    @media (max-width: 768px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .header { padding: 24px; }
+      h1 { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    
+    <!-- HEADER -->
+    <header class="header">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+        <span class="badge badge-primary">Plataforma Tecnológica de Tránsito & Transporte</span>
+        <button class="btn-print" onclick="window.print()">🖨️ Imprimir / Exportar a PDF</button>
+      </div>
+      <h1>Guía Funcional del Simulador Integral (SIGT)</h1>
+      <p class="subtitle">
+        Manual técnico y operativo de las capacidades del sistema para la <strong>Municipalidad de Asunción</strong> y municipios de <strong>Gran Asunción</strong> (San Lorenzo, Fernando de la Mora, Luque, Lambaré). Integración multi-fuente: <em>Tráfico General What-If, Waze for Cities, GPS AVL de Buses y Billetaje Electrónico</em>.
+      </p>
+    </header>
+
+    <!-- ACCESOS RÁPIDOS -->
+    <nav class="nav-bar">
+      <a href="#what-if" class="nav-pill">🚗 Escenarios What-If</a>
+      <a href="#waze" class="nav-pill">🔥 Waze for Cities</a>
+      <a href="#gps" class="nav-pill">🛰️ Monitoreo GPS VMT</a>
+      <a href="#billetaje" class="nav-pill">💳 Billetaje & Matriz OD</a>
+      <a href="#simpy" class="nav-pill">🚌 Microsimulador Buses</a>
+      <a href="#arquitectura" class="nav-pill">⚙️ Arquitectura & Puertos</a>
+    </nav>
+
+    <!-- SECCIÓN 1: FUSIÓN DE LAS 3 FUENTES -->
+    <h2 class="section-title">1. Modelo Unificado de Tránsito y Transporte</h2>
+    <div class="grid-3">
+      <div class="card">
+        <span class="badge badge-amber">Tráfico Particular / General</span>
+        <h3>🔥 Waze for Cities (CCP)</h3>
+        <p>Provee información en tiempo real de la fricción vehicular privada en las calles de la ciudad.</p>
+        <ul class="feature-list">
+          <li><strong>Alertas en vivo:</strong> Accidentes, desvíos, cortes por obras, baches.</li>
+          <li><strong>Jams (Atascos):</strong> Velocidades efectivas por tramo vial y demoras reales.</li>
+          <li>Calibración de la velocidad libre para la función BPR.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <span class="badge badge-primary">Flota Transporte Público</span>
+        <h3>🛰️ GPS / AVL del VMT</h3>
+        <p>Monitoreo satelital en tiempo real de buses operando en corredores metropolitanos.</p>
+        <ul class="feature-list">
+          <li>Telemetría de posición, velocidad comercial y rumbo cada 5-10 seg.</li>
+          <li>Detección de puntos de estrangulamiento y demoras en itinerarios.</li>
+          <li>Transmisión bidireccional por WebSocket al Dashboard.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <span class="badge badge-emerald">Demanda de Pasajeros</span>
+        <h3>💳 Billetaje Georreferenciado</h3>
+        <p>Volumen de usuarios y patrones de desplazamiento en Asunción y Área Metropolitana.</p>
+        <ul class="feature-list">
+          <li><strong>Matriz Origen-Destino (O-D):</strong> Algoritmos de <em>Trip Chaining</em>.</li>
+          <li>Aforos de ascenso y descenso por paradero crítico.</li>
+          <li>Cálculo de impacto social: horas-hombre perdidas ante desvíos.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 2: SIMULADOR DE TRÁFICO WHAT-IF -->
+    <h2 id="what-if" class="section-title">2. Módulo de Tránsito & Escenarios "What-If"</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>🎯 Preguntas que Responde al Departamento de Tránsito</h3>
+        <p>Permite evaluar el impacto antes de realizar cualquier intervención física o normativa:</p>
+        <ul class="feature-list">
+          <li><strong>¿Qué pasa si invertimos el sentido de una calle?</strong> (ej: Calle Palma o Estrella).</li>
+          <li><strong>¿Qué pasa si convertimos una avenida doble en par vial?</strong> (ej: Mcal. Estigarribia y Julia Miranda Cueto en San Lorenzo).</li>
+          <li><strong>¿Qué ocurre si cerramos una arteria por obras?</strong> (ej: Mcal. López por desagüe pluvial).</li>
+          <li><strong>¿Cuál es el beneficio de implementar un carril exclusivo de colectivos?</strong></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🧠 Motor Matemático BPR & Reasignación</h3>
+        <p>Calcula el tiempo de viaje efectivo considerando la saturación de vehículos respecto a la capacidad:</p>
+        <div class="formula-box">
+          T = T₀ × [ 1 + 0.15 × (Volumen / Capacidad)⁴ ]
+        </div>
+        <ul class="feature-list">
+          <li><strong>Detección de Derrame de Tráfico:</strong> El volumen desplazado se reasigna a las arterias paralelas directas.</li>
+          <li><strong>Alerta de Calles en Colapso:</strong> Advierte en rojo las paralelas que superan el 105% de capacidad (LOS F).</li>
+          <li><strong>Impacto en Buses:</strong> Identifica las líneas de ómnibus que sufren retrasos o requieren desvío forzoso.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 3: MATRIZ DE COBERTURA POR MUNICIPIO -->
+    <h2 class="section-title">3. Cobertura en Gran Asunción</h2>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Municipio</th>
+            <th>Corredores Principales Modelados</th>
+            <th>Intervenciones Típicas Soportadas</th>
+            <th>Líneas de Transporte Asignadas</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Asunción (Capital)</strong></td>
+            <td>Calle Palma, Estrella, Oliva, Herrera, Av. Mcal. López, Av. Eusebio Ayala, Costanera, Artigas, España, Guido Spano.</td>
+            <td>Cambio de sentido en microcentro, par vial Mcal. López/España, carriles exclusivos de bus, cierres por obras.</td>
+            <td>Líneas 12, 15, 20, 21, 23, 24, 26, 27, 30, 31, 38, 41, 56.</td>
+          </tr>
+          <tr>
+            <td><strong>Fernando de la Mora</strong></td>
+            <td>Ruta PY02 (Av. Mcal. Estigarribia), Calle 11 de Septiembre, Av. Defensores del Chaco.</td>
+            <td>Derrame de tráfico de PY02 hacia 11 de Septiembre, giros semaforizados.</td>
+            <td>Líneas 11, 20, 21, 49, 96.</td>
+          </tr>
+          <tr>
+            <td><strong>San Lorenzo</strong></td>
+            <td>Calle Julia Miranda Cueto (Mercado), Calle Mcal. Estigarribia, Av. Ortiz Guerrero.</td>
+            <td>Par vial Julia Miranda Cueto / Mcal. Estigarribia, descongestión del mercado municipal.</td>
+            <td>Líneas 12, 19, 27, 45, 49, 56.</td>
+          </tr>
+          <tr>
+            <td><strong>Luque</strong></td>
+            <td>Autopista Silvio Pettirossi, Av. General Aquino (Tapua), Av. Corrales.</td>
+            <td>Acceso al aeropuerto, desvíos por obras en Sudamericana y autopista.</td>
+            <td>Líneas 28, 30 (Aeropuerto), 51.</td>
+          </tr>
+          <tr>
+            <td><strong>Lambaré</strong></td>
+            <td>Av. Cacique Lambaré, Avda. 1ro de Marzo, Avda. Perón.</td>
+            <td>Control de flujo en accesos hacia Asunción por Félix Bogado y Perón.</td>
+            <td>Líneas 9, 23, 33, 41.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECCIÓN 4: MICROSIMULADOR DE TRANSPORTE PÚBLICO -->
+    <h2 id="simpy" class="section-title">4. Microsimulación de Transporte Público (SimTransit)</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>🚌 Motor de Eventos Discretos (SimPy)</h3>
+        <p>Modela el comportamiento dinámico del sistema de transporte colectivo:</p>
+        <ul class="feature-list">
+          <li><strong>Interacción Bus-Parada:</strong> Simula colas de espera de pasajeros y tasas de ascenso (Poisson).</li>
+          <li><strong>Tiempos de Parada Dinámicos:</strong> Demora basada en cantidad de personas subiendo/bajando.</li>
+          <li><strong>Control de Headway:</strong> Regularidad entre salidas para asegurar frecuencias estables.</li>
+          <li><strong>Prevención de Bunching:</strong> Alertas tempranas cuando dos buses se pegan degradando el servicio.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>📊 Módulo Unidades Funcionales (UF)</h3>
+        <p>Diseñado conforme al marco regulatorio (Ley N° 7617):</p>
+        <ul class="feature-list">
+          <li>Agrupación de líneas de colectivos por cuencas operacionales y consorcios.</li>
+          <li>Validación de la <em>Flota Mínima Habilitada</em> requerida por cada corredor.</li>
+          <li>Simulación de cumplimiento de kilómetros programados vs. kilómetros reales.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 5: DESPLIEGUE DOCKER Y PUERTOS -->
+    <h2 id="arquitectura" class="section-title">5. Arquitectura Técnica y Puertos Operativos</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>🐳 Configuración de Contenedores (Docker)</h3>
+        <ul class="feature-list">
+          <li><strong>simulador_backend (FastAPI):</strong> Motor analítico, APIs REST, WebSockets en tiempo real.</li>
+          <li><strong>simulador_frontend (React 18 + Vite + Leaflet):</strong> Interfaz web con mapas reactivos y panel What-If.</li>
+          <li><strong>simulador_db (PostgreSQL 15 + PostGIS):</strong> Base de datos geoespacial (red vial, paradas, GPS).</li>
+          <li><strong>simulador_redis (Redis 7):</strong> Broker para eventos en tiempo real y tareas Celery.</li>
+          <li><strong>simulador_worker & beat (Celery):</strong> Sincronizaciones periódicas de datos externos.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🔌 Mapa de Puertos Asignados</h3>
+        <p>Configurado para convivir en paralelo con otros sistemas locales:</p>
+        <div class="formula-box">
+          Frontend Web:  http://localhost:3000<br>
+          API Backend:   http://localhost:8001<br>
+          API Docs:      http://localhost:8001/docs<br>
+          PostGIS DB:    localhost:5433 (simulador)
+        </div>
+        <p style="font-size: 0.8rem; color: var(--text-muted);">
+          * El backend y la base de datos se asignaron a los puertos 8001 y 5433 para evitar colisiones con proyectos existentes en los puertos 8000 y 5432.
+        </p>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div>
+        <strong>SimTransit SIGT</strong> — Desarrollado para la Municipalidad de Asunción & Viceministerio de Transporte (VMT/CID).
+      </div>
+      <div>
+        Versión 2.0 • Asunción, Paraguay
+      </div>
+    </footer>
+
+  </div>
+</body>
+</html>

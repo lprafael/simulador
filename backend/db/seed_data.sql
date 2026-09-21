@@ -1,0 +1,6 @@
+-- ============================================================
+-- Datos del Simulador de Transporte Público
+-- Nota: Este archivo está vacío para evitar la inserción de datos demo.
+-- El sistema sincronizará automáticamente la infraestructura real 
+-- desde el servidor CID (168.90.177.232) al iniciar.
+-- ============================================================

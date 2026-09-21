@@ -140,6 +140,7 @@ export default function Dashboard() {
   }, [])
 
   const handleResultadosSimulacion = (data) => {
+    if (!data) return
     setResultadosSim(data)
     
     // KPIs desde simulación

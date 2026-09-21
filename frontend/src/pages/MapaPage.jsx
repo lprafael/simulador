@@ -57,14 +57,16 @@ export default function MapaPage() {
   }, [])
 
   const handleResultados = (data) => {
-    if (data.posiciones && data.posiciones.length > 0) {
+    if (!data) return
+    const posiciones = data.posiciones || (Array.isArray(data) ? data : [])
+    if (posiciones && posiciones.length > 0) {
       const byBus = {}
-      data.posiciones.forEach(p => { byBus[p.id_bus] = p })
+      posiciones.forEach(p => { if (p && p.id_bus != null) byBus[p.id_bus] = p })
       const busPositions = Object.values(byBus).map((p, i) => ({
         id_bus: p.id_bus,
         interno: p.interno || `BUS-${p.id_bus}`,
-        lat: PARADEROS_DEMO[i % PARADEROS_DEMO.length]?.lat ?? -25.2900,
-        lon: PARADEROS_DEMO[i % PARADEROS_DEMO.length]?.lon ?? -57.6350,
+        lat: p.lat ?? (PARADEROS_DEMO[i % PARADEROS_DEMO.length]?.lat ?? -25.2900),
+        lon: p.lon ?? (PARADEROS_DEMO[i % PARADEROS_DEMO.length]?.lon ?? -57.6350),
         velocidad: p.velocidad_kmh || 25,
         pasajeros_abordo: p.pasajeros_abordo,
         estado: 'SIMULADO',

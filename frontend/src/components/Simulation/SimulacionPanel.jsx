@@ -52,24 +52,56 @@ export default function SimulacionPanel({ onResultados }) {
     { id_linea: 2, numero_linea: '31', nombre_comercial: 'Línea 31 - Demo' },
   ] : lineasReales
 
+  const estaEjecutando = estadoSimulacion === 'EJECUTANDO' || estadoSimulacion === 'corriendo'
+  const estaCompletado = estadoSimulacion === 'COMPLETADO' || estadoSimulacion === 'completado'
+
   const ejecutar = async () => {
     setError(null)
     iniciarSimulacion()
 
     try {
-      let respuesta
+      let resultados = null
+
       if (modoDemo) {
-        respuesta = await simulacionApi.ejecutarDemo()
+        const respuesta = await simulacionApi.ejecutarDemo()
+        resultados = respuesta.data
       } else {
-        respuesta = await simulacionApi.crear({
+        const respuesta = await simulacionApi.crear({
           ...parametros,
           nombre: `Simulación ${new Date().toLocaleString()}`
         })
+        const sim = respuesta.data
+        const idSim = sim?.id_simulacion
+
+        if (idSim) {
+          // Polling breve hasta que la simulación termine en background (normalmente < 1s)
+          let intentos = 0
+          while (intentos < 30) {
+            await new Promise(r => setTimeout(r, 600))
+            const check = await simulacionApi.obtener(idSim)
+            if (check.data?.estado === 'COMPLETADO' && check.data?.resultado_resumen) {
+              resultados = {
+                id_simulacion: idSim,
+                nombre: check.data.nombre,
+                estado: 'COMPLETADO',
+                kpis: check.data.resultado_resumen,
+                ...check.data.resultado_resumen,
+              }
+              break
+            } else if (check.data?.estado === 'ERROR') {
+              throw new Error('La simulación reportó un error durante la ejecución')
+            }
+            intentos++
+          }
+        }
+
+        if (!resultados) {
+          resultados = respuesta.data || {}
+        }
       }
       
-      const { id_simulacion } = respuesta.data
-      completarSimulacion(id_simulacion)
-      if (onResultados) onResultados(id_simulacion)
+      completarSimulacion(resultados)
+      if (onResultados) onResultados(resultados)
     } catch (err) {
       console.error('Error al ejecutar simulación:', err)
       
@@ -159,14 +191,14 @@ export default function SimulacionPanel({ onResultados }) {
       {/* Botón de Acción */}
       <button
         onClick={ejecutar}
-        disabled={estadoSimulacion === 'EJECUTANDO' || (lineasVisibles.length === 0 && !modoDemo)}
+        disabled={estaEjecutando || (lineasVisibles.length === 0 && !modoDemo)}
         className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-all ${
-          estadoSimulacion === 'EJECUTANDO'
+          estaEjecutando
             ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
             : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20 active:scale-95'
         }`}
       >
-        {estadoSimulacion === 'EJECUTANDO' ? (
+        {estaEjecutando ? (
           <>
             <RefreshCw className="w-5 h-5 animate-spin" />
             SIMULANDO...
@@ -180,7 +212,7 @@ export default function SimulacionPanel({ onResultados }) {
       </button>
 
       {/* Estado */}
-      {estadoSimulacion === 'COMPLETADO' && (
+      {estaCompletado && (
         <div className="flex items-center justify-center gap-2 text-green-400 animate-bounce">
           <CheckCircle2 className="w-5 h-5" />
           <span className="text-sm font-bold">¡Simulación finalizada!</span>

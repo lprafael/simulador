@@ -29,6 +29,7 @@ export default function SimulacionPage() {
   const [ocupacionData, setOcupacionData] = useState([])
 
   const handleResultados = (data) => {
+    if (!data) return
     setResultados(data)
     
     // Construir serie de headways

@@ -131,6 +131,11 @@ async def _ejecutar_simulacion_bg(id_simulacion: int, config: ConfigSimulacion):
                 "total_pasajeros": resultado.total_pasajeros_transportados,
                 "total_eventos": resultado.total_eventos,
                 "estados_buses": resultado.estados_buses,
+                "posiciones": resultado.posiciones,
+                "eventos": resultado.eventos[:100],
+                "headways": {
+                    str(k): v for k, v in resultado.headways_por_paradero.items()
+                }
             }
             db.commit()
         
@@ -274,6 +279,7 @@ async def ejecutar_simulacion_demo(background_tasks: BackgroundTasks):
     resultado = await asyncio.to_thread(motor.ejecutar, id_simulacion=0)
     
     return {
+        "id_simulacion": 0,
         "estado": "COMPLETADO",
         "nombre": resultado.nombre,
         "duracion_sim_min": resultado.duracion_sim_min,

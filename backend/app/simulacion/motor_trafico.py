@@ -9,6 +9,8 @@ Modela:
 - Integración y calibración con datos de Waze for Cities.
 """
 
+import os
+import json
 import math
 import heapq
 import logging
@@ -17,11 +19,22 @@ from dataclasses import dataclass, field
 
 logger = logging.getLogger(__name__)
 
+# Cargar caché de geometrías reales de OpenStreetMap si está disponible
+_cache_file = os.path.join(os.path.dirname(__file__), "red_vial_osm_cache.json")
+_red_vial_osm = None
+if os.path.exists(_cache_file):
+    try:
+        with open(_cache_file, "r", encoding="utf-8") as _f:
+            _red_vial_osm = json.load(_f)
+            logger.info(f"✅ Cargadas {len(_red_vial_osm)} arterias reales desde OpenStreetMap (caché local)")
+    except Exception as _e:
+        logger.warning(f"No se pudo cargar red_vial_osm_cache.json: {_e}")
+
 # =====================================================================
 # RED VIAL BASE DE ASUNCIÓN Y GRAN ASUNCIÓN (Georreferenciada)
 # =====================================================================
 
-RED_VIAL_ASUNCION_METRO: List[Dict[str, Any]] = [
+RED_VIAL_ASUNCION_METRO: List[Dict[str, Any]] = _red_vial_osm or [
     # --- CENTRO HISTÓRICO Y TRANSVERSALES ASUNCIÓN ---
     {
         "id_tramo": 1,

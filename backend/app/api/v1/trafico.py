@@ -4,7 +4,7 @@ Especializado para la Municipalidad de Asunción y municipios de Gran Asunción.
 Permite evaluar escenarios 'What-If' de sentidos de calles, cierres viales e integración con Waze.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 from app.core.database import get_db
 from app.simulacion.motor_trafico import motor_trafico, RED_VIAL_ASUNCION_METRO
 from app.services.congestion_service import congestion_service
-from app.models.trafico import EscenarioWhatIf
+from app.models.trafico import EscenarioWhatIf, TramoVial
 
 router = APIRouter()
 
@@ -95,12 +95,38 @@ def listar_municipios():
 @router.get("/red-vial")
 def obtener_red_vial(
     municipio: Optional[str] = Query(None, description="Filtrar por municipio"),
-    franja: str = Query("PICO_MANANA", description="PICO_MANANA | PICO_TARDE | VALLE")
+    franja: str = Query("PICO_MANANA", description="PICO_MANANA | PICO_TARDE | VALLE"),
+    db: Session = Depends(get_db)
 ):
     """
     Retorna la red vial con sentidos, capacidades y nivel de servicio base.
+    Prioriza los tramos con trazado real importados en PostgreSQL/PostGIS.
     """
-    tramos = RED_VIAL_ASUNCION_METRO
+    tramos_db = db.query(TramoVial).filter(TramoVial.estado == True).order_by(TramoVial.id_tramo).all()
+    if tramos_db:
+        tramos = []
+        for t in tramos_db:
+            tramos.append({
+                "id_tramo": t.id_tramo,
+                "codigo": t.codigo,
+                "nombre_calle": t.nombre_calle,
+                "municipio": t.municipio,
+                "categoria": t.categoria,
+                "sentido": t.sentido,
+                "nodo_origen": t.nodo_origen,
+                "nodo_destino": t.nodo_destino,
+                "carriles": t.carriles,
+                "longitud_m": float(t.longitud_m or 1000.0),
+                "velocidad_limite_kmh": float(t.velocidad_limite_kmh or 50.0),
+                "capacidad_veh_hora": t.capacidad_veh_hora or 1600,
+                "flujo_base_veh_hora": t.flujo_base_veh_hora or 800,
+                "coordenadas": t.coordenadas or [],
+                "lineas_colectivo": t.lineas_colectivo or [],
+                "paralelas_ids": []
+            })
+    else:
+        tramos = RED_VIAL_ASUNCION_METRO
+
     if municipio and municipio != "Todos":
         tramos = [t for t in tramos if t.get("municipio", "").lower() == municipio.lower()]
     
@@ -130,11 +156,36 @@ def obtener_red_vial(
 
 
 @router.post("/simular-whatif")
-def simular_what_if(req: SimulacionWhatIfRequest):
+def simular_what_if(req: SimulacionWhatIfRequest, db: Session = Depends(get_db)):
     """
     Ejecuta el cálculo de reasignación de tráfico ante cambios de sentido o cierres.
     Determina si calles paralelas colapsan y qué líneas de transporte público son afectadas.
     """
+    # Cargar tramos reales de BD en el motor
+    tramos_db = db.query(TramoVial).filter(TramoVial.estado == True).order_by(TramoVial.id_tramo).all()
+    if tramos_db:
+        tramos = []
+        for t in tramos_db:
+            tramos.append({
+                "id_tramo": t.id_tramo,
+                "codigo": t.codigo,
+                "nombre_calle": t.nombre_calle,
+                "municipio": t.municipio,
+                "categoria": t.categoria,
+                "sentido": t.sentido,
+                "nodo_origen": t.nodo_origen,
+                "nodo_destino": t.nodo_destino,
+                "carriles": t.carriles,
+                "longitud_m": float(t.longitud_m or 1000.0),
+                "velocidad_limite_kmh": float(t.velocidad_limite_kmh or 50.0),
+                "capacidad_veh_hora": t.capacidad_veh_hora or 1600,
+                "flujo_base_veh_hora": t.flujo_base_veh_hora or 800,
+                "coordenadas": t.coordenadas or [],
+                "lineas_colectivo": t.lineas_colectivo or [],
+                "paralelas_ids": []
+            })
+        motor_trafico.tramos_raw = tramos
+
     mods = [m.model_dump() for m in req.modificaciones]
     resultado = motor_trafico.ejecutar_what_if(
         modificaciones=mods,
@@ -142,6 +193,22 @@ def simular_what_if(req: SimulacionWhatIfRequest):
         franja=req.franja_horaria
     )
     return resultado
+
+
+@router.post("/importar-osm")
+def disparar_importacion_osm(background_tasks: BackgroundTasks):
+    """
+    Ejecuta la importación y actualización de la red vial desde OpenStreetMap hacia PostgreSQL/PostGIS.
+    """
+    import subprocess
+    def run_import():
+        import sys
+        import os
+        script_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "scripts", "import_red_vial_osm.py")
+        subprocess.run([sys.executable, script_path], check=False)
+        
+    background_tasks.add_task(run_import)
+    return {"status": "INICIADO", "mensaje": "Importación de ejes viales de OpenStreetMap iniciada en segundo plano."}
 
 
 @router.get("/waze/live")

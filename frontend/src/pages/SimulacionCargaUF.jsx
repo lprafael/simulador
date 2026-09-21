@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { MapContainer, TileLayer, GeoJSON, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
+import { MAP_TILE_CONFIG } from '../config/map'
 import { 
   BarChart, 
   Bar, 
@@ -483,8 +484,9 @@ export default function SimulacionCargaUF() {
                 style={{ height: '100%', width: '100%' }}
               >
                 <TileLayer
-                  url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                  attribution='&copy; CARTO'
+                  url={MAP_TILE_CONFIG.url}
+                  attribution={MAP_TILE_CONFIG.attribution}
+                  maxZoom={MAP_TILE_CONFIG.maxZoom}
                 />
                 
                 {/* Geocercas y Troncales */}

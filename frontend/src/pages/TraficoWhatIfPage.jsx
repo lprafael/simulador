@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { MapContainer, TileLayer, Polyline, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
+import { MAP_TILE_CONFIG } from '../config/map'
 import Header from '../components/Layout/Header'
 import { traficoApi } from '../services/api'
 import {
@@ -336,8 +337,9 @@ export default function TraficoWhatIfPage() {
               <MapRecenter center={centerConfig.center} zoom={centerConfig.zoom} />
               
               <TileLayer
-                attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                url={MAP_TILE_CONFIG.url}
+                attribution={MAP_TILE_CONFIG.attribution}
+                maxZoom={MAP_TILE_CONFIG.maxZoom}
               />
 
               {/* TRAMOS VIALES CON COLORES DE TRÁFICO Y SENTIDOS */}

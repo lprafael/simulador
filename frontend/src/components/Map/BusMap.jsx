@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle, useMap, GeoJSON } from 'react-leaflet'
 import L from 'leaflet'
+import { MAP_TILE_CONFIG } from '../../config/map'
 
 // Fix Leaflet default icon
 delete L.Icon.Default.prototype._getIconUrl
@@ -143,9 +144,9 @@ export default function BusMap({
     >
       {/* Capa base oscura */}
       <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
-        maxZoom={19}
+        url={MAP_TILE_CONFIG.url}
+        attribution={MAP_TILE_CONFIG.attribution}
+        maxZoom={MAP_TILE_CONFIG.maxZoom}
       />
 
       {/* Capa de Congestión Interna (Buses) */}

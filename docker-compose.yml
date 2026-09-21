@@ -101,6 +101,7 @@ services:
     environment:
       VITE_API_URL: http://localhost:8001
       VITE_WS_URL: ws://localhost:8001
+      VITE_CARTO_API_KEY: ${VITE_CARTO_API_KEY:-cb1_3skd_1_b01311b843bcb7fb316c4384}
     depends_on:
       - backend
     volumes:

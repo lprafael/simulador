@@ -24,18 +24,27 @@ export default function App() {
   useEffect(() => {
     let ws = null
     let reconnectTimer = null
+    let pingInterval = null
+    let isDisposed = false
     
     const conectar = () => {
+      if (isDisposed) return
+      
       try {
         ws = new WebSocket(`${WS_URL}/ws/posiciones`)
         
         ws.onopen = () => {
+          if (isDisposed) {
+            ws.close()
+            return
+          }
           setWsConectado(true)
           setStoreWs(true)
-          console.log('✅ WebSocket conectado')
+          console.log('✅ WebSocket conectado a:', `${WS_URL}/ws/posiciones`)
         }
         
         ws.onmessage = (event) => {
+          if (isDisposed) return
           try {
             const msg = JSON.parse(event.data)
             
@@ -57,8 +66,10 @@ export default function App() {
         ws.onclose = () => {
           setWsConectado(false)
           setStoreWs(false)
-          // Reconectar cada 5 segundos
-          reconnectTimer = setTimeout(conectar, 5000)
+          if (!isDisposed) {
+            clearTimeout(reconnectTimer)
+            reconnectTimer = setTimeout(conectar, 5000)
+          }
         }
         
         ws.onerror = () => {
@@ -67,29 +78,44 @@ export default function App() {
         }
         
         // Heartbeat cada 25 segundos
-        const pingInterval = setInterval(() => {
+        clearInterval(pingInterval)
+        pingInterval = setInterval(() => {
           if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ tipo: 'PING' }))
           }
         }, 25000)
-        
-        return () => clearInterval(pingInterval)
       } catch (e) {
         console.warn('WebSocket no disponible:', e.message)
-        reconnectTimer = setTimeout(conectar, 10000)
+        if (!isDisposed) {
+          reconnectTimer = setTimeout(conectar, 10000)
+        }
       }
     }
     
     conectar()
     
     return () => {
+      isDisposed = true
       clearTimeout(reconnectTimer)
-      if (ws) ws.close()
+      clearInterval(pingInterval)
+      if (ws) {
+        ws.onopen = null
+        ws.onmessage = null
+        ws.onerror = null
+        ws.onclose = null
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.close()
+        } else if (ws.readyState === WebSocket.CONNECTING) {
+          ws.onopen = () => {
+            try { ws.close() } catch (err) {}
+          }
+        }
+      }
     }
   }, [])
 
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <div className="app-layout">
         <Sidebar wsConectado={wsConectado} />
         

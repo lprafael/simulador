@@ -75,7 +75,7 @@ class Ruta(Base):
     __tablename__ = "rutas"
     id_ruta = Column(Integer, primary_key=True, index=True)
     id_linea = Column(Integer, ForeignKey("lineas.id_linea"))
-    sentido = Column(String(10))   # IDA | VUELTA
+    sentido = Column(String(50))   # IDA | VUELTA | CIRCULAR | CIRCULAR IDA | etc.
     nombre = Column(String(200))
     geom = Column(Geometry("LINESTRING", srid=4326))
     id_externo_cid = Column(String(100), nullable=True) # Mapping a public.catalogo_rutas (ruta_hex)

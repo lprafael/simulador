@@ -62,10 +62,10 @@ CREATE TABLE IF NOT EXISTS composicion_uf (
 CREATE TABLE IF NOT EXISTS rutas (
     id_ruta SERIAL PRIMARY KEY,
     id_linea INTEGER REFERENCES lineas(id_linea),
-    sentido VARCHAR(10) CHECK (sentido IN ('IDA', 'VUELTA')),
+    sentido VARCHAR(50),
     nombre VARCHAR(200),
     geom GEOMETRY(LINESTRING, 4326),
-    id_externo_cid INTEGER,
+    id_externo_cid VARCHAR(100),
     distancia_km NUMERIC(8,2),
     tiempo_ciclo_min NUMERIC(6,1)
 );

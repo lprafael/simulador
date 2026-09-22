@@ -18,8 +18,10 @@ def listar_lineas(db: Session = Depends(get_db)):
         {
             "id_linea": l.id_linea,
             "codigo": l.numero_linea,
+            "numero_linea": l.numero_linea,
             "nombre": l.nombre_comercial or f"Línea {l.numero_linea}",
-            "descripcion": l.identificador_troncal or "Servicio Regular",
+            "nombre_comercial": l.nombre_comercial or f"Línea {l.numero_linea}",
+            "descripcion": l.identificador_troncal or l.nombre_comercial or f"Línea {l.numero_linea}",
             "color_hex": l.color_hex or "#3B82F6",
             "estado": l.estado
         }

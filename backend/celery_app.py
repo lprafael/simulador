@@ -4,6 +4,13 @@ Broker: Redis (already in docker-compose).
 Tasks: periodic CID sync, heavy analysis jobs offloaded from the API.
 """
 import os
+import sys
+
+# Asegurar que el directorio raíz de la app esté en sys.path
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+if _current_dir not in sys.path:
+    sys.path.insert(0, _current_dir)
+
 from celery import Celery
 from celery.schedules import crontab
 

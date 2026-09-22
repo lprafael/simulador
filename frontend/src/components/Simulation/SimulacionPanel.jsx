@@ -149,10 +149,13 @@ export default function SimulacionPanel({ onResultados }) {
           disabled={cargandoLineas || estadoSimulacion === 'EJECUTANDO'}
           className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500 outline-none"
         >
-          {cargandoLineas && <option>Cargando líneas...</option>}
+          {cargandoLineas && <option value="">Cargando líneas...</option>}
+          {!cargandoLineas && lineasVisibles.length === 0 && (
+            <option value="">No hay líneas disponibles</option>
+          )}
           {lineasVisibles.map(l => (
             <option key={l.id_linea} value={l.id_linea}>
-              {l.numero_linea} — {l.nombre_comercial}
+              Línea {l.numero_linea || l.codigo} — {l.nombre_comercial || l.nombre || l.descripcion || 'Servicio Metropolitano'}
             </option>
           ))}
         </select>

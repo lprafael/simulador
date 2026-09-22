@@ -27,6 +27,8 @@ class EmpresaResponse(EmpresaBase):
 # ─────────────── Linea ───────────────
 class LineaBase(BaseModel):
     codigo: str
+    numero_linea: Optional[str] = None
+    nombre_comercial: Optional[str] = None
     descripcion: Optional[str] = None
     color_hex: Optional[str] = "#3B82F6"
     estado: bool = True

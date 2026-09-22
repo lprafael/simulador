@@ -63,6 +63,18 @@ class ConnectionManager:
         for dead in dead_connections:
             self.disconnect(dead, room)
 
+    async def broadcast_all(self, message: dict):
+        """Envía un mensaje a todas las conexiones activas."""
+        message_str = json.dumps(message)
+        dead = []
+        for conn in list(self.all_connections):
+            try:
+                await conn.send_text(message_str)
+            except Exception:
+                dead.append(conn)
+        for d in dead:
+            self.all_connections.discard(d)
+
 # Singleton manager
 manager = ConnectionManager()
 
@@ -74,12 +86,19 @@ async def websocket_posiciones(websocket: WebSocket):
     """WebSocket para posiciones GPS en tiempo real."""
     await manager.connect(websocket, "posiciones")
     try:
-        # Enviar confirmación inmediata
+        # Enviar confirmación inmediata y posiciones activas
         await manager.send_personal({
             "tipo": "CONEXION_OK",
             "mensaje": "Conectado al stream de posiciones GPS",
             "timestamp": datetime.utcnow().isoformat(),
         }, websocket)
+
+        if posiciones_en_tiempo_real:
+            await manager.send_personal({
+                "tipo": "HEARTBEAT",
+                "posiciones": list(posiciones_en_tiempo_real.values()),
+                "timestamp": datetime.utcnow().isoformat(),
+            }, websocket)
         
         while True:
             # Mantener viva la conexión y esperar PINGs del cliente

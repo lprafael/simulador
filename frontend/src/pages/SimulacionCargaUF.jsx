@@ -329,7 +329,25 @@ export default function SimulacionCargaUF() {
                 </div>
 
                 <div>
-                  <label style={STYLES.label}>Fecha de Análisis</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <label style={{ ...STYLES.label, marginBottom: 0 }}>Fecha de Análisis</label>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button 
+                        type="button"
+                        onClick={() => setFecha('2024-05-15')} 
+                        style={{ fontSize: '0.65rem', background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)', borderRadius: 4, padding: '2px 6px', color: 'var(--color-accent-blue)', cursor: 'pointer' }}
+                      >
+                        Histórico 2024
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => setFecha(new Date().toISOString().split('T')[0])} 
+                        style={{ fontSize: '0.65rem', background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)', borderRadius: 4, padding: '2px 6px', color: 'var(--color-text-secondary)', cursor: 'pointer' }}
+                      >
+                        Hoy
+                      </button>
+                    </div>
+                  </div>
                   <div style={{ position: 'relative' }}>
                     <input 
                       type="date" 
@@ -425,6 +443,24 @@ export default function SimulacionCargaUF() {
                 <div style={{ display: 'flex', gap: 10, color: 'var(--color-danger)' }}>
                   <AlertCircle size={20} />
                   <div style={{ fontSize: '0.8rem' }}>{error}</div>
+                </div>
+              </div>
+            )}
+
+            {resultado?.mensaje && (
+              <div className="card" style={{ border: '1px solid var(--color-warning)', background: 'rgba(245, 158, 11, 0.08)' }}>
+                <div style={{ display: 'flex', gap: 10, color: '#f59e0b', alignItems: 'center' }}>
+                  <Info size={18} />
+                  <div style={{ fontSize: '0.8rem' }}>{resultado.mensaje}</div>
+                </div>
+              </div>
+            )}
+
+            {resultado?.modo_estimado && (
+              <div className="card" style={{ border: '1px solid var(--color-accent-blue)', background: 'rgba(59, 130, 246, 0.08)', padding: 10 }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: '0.75rem', color: 'var(--color-accent-blue)' }}>
+                  <Activity size={14} />
+                  <span>Modo Autónomo: demanda y validaciones calculadas con modelo calibrado (intranet Billetaje fuera de alcance).</span>
                 </div>
               </div>
             )}

@@ -5,19 +5,51 @@ import { Clock, TrendingUp, AlertTriangle, CheckCircle, Zap, Search } from 'luci
 
 export default function PrediccionesPage() {
   const [busId, setBusId] = useState(1)
+  const [buses, setBuses] = useState([])
   const [etas, setEtas] = useState([])
   const [optimizacion, setOptimizacion] = useState(null)
   const [loading, setLoading] = useState(false)
   const [demanda, setDemanda] = useState(800)
 
+  // Cargar lista de buses disponibles
+  useEffect(() => {
+    const cargarBuses = async () => {
+      try {
+        const res = await busesApi.listar()
+        if (res.data && res.data.length > 0) {
+          setBuses(res.data)
+          setBusId(res.data[0].id_bus)
+        } else {
+          setBuses([1, 2, 3, 4, 5, 6].map(id => ({ id_bus: id, interno: id.toString().padStart(3, '0') })))
+        }
+      } catch {
+        setBuses([1, 2, 3, 4, 5, 6].map(id => ({ id_bus: id, interno: id.toString().padStart(3, '0') })))
+      }
+    }
+    cargarBuses()
+  }, [])
+
   const cargarPredicciones = async () => {
+    if (!busId) return
     setLoading(true)
     try {
-      const resEta = await prediccionesApi.getEta(busId)
-      setEtas(resEta.data.predicciones)
-      
-      const resOpt = await prediccionesApi.getOptimizacion(1, demanda)
-      setOptimizacion(resOpt.data)
+      const [resEta, resOpt] = await Promise.allSettled([
+        prediccionesApi.getEta(busId),
+        prediccionesApi.getOptimizacion(1, demanda)
+      ])
+
+      if (resEta.status === 'fulfilled' && resEta.value.data) {
+        setEtas(resEta.value.data.predicciones || [])
+      } else {
+        console.warn('No se pudieron obtener ETAs para el bus:', busId, resEta.reason)
+        setEtas([])
+      }
+
+      if (resOpt.status === 'fulfilled' && resOpt.value.data) {
+        setOptimizacion(resOpt.value.data)
+      } else {
+        console.warn('No se pudo obtener optimización:', resOpt.reason)
+      }
     } catch (err) {
       console.error(err)
     } finally {
@@ -49,12 +81,14 @@ export default function PrediccionesPage() {
                 <div style={{ display: 'flex', gap: 8 }}>
                   <select 
                     className="form-control" 
-                    style={{ width: 150, padding: '4px 10px' }}
+                    style={{ minWidth: 160, padding: '4px 10px' }}
                     value={busId}
-                    onChange={(e) => setBusId(e.target.value)}
+                    onChange={(e) => setBusId(Number(e.target.value))}
                   >
-                    {[1,2,3,4,5,6].map(id => (
-                      <option key={id} value={id}>Bus {id.toString().padStart(3, '0')}</option>
+                    {buses.map(b => (
+                      <option key={b.id_bus} value={b.id_bus}>
+                        Bus {b.interno || b.id_bus.toString().padStart(3, '0')} {b.placa ? `(${b.placa})` : ''}
+                      </option>
                     ))}
                   </select>
                 </div>

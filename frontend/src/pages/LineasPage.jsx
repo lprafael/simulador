@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import Header from '../components/Layout/Header'
 import { lineasApi } from '../services/api'
-import { RefreshCw, MapPin, Truck, Route } from 'lucide-react'
+import { RefreshCw, MapPin, Truck, Route, Info } from 'lucide-react'
+import DetalleLineaModal from '../components/Lineas/DetalleLineaModal'
 
 export default function LineasPage() {
   const [lineas, setLineas] = useState([])
   const [loading, setLoading] = useState(true)
+  const [lineaSeleccionada, setLineaSeleccionada] = useState(null)
 
   useEffect(() => {
     cargarLineas()
@@ -28,6 +30,12 @@ export default function LineasPage() {
       <Header
         titulo="Líneas y Rutas"
         subtitulo={loading ? "Cargando datos reales..." : `${lineas.length} líneas operativas en el sistema CID`}
+        acciones={
+          <button className="btn btn-outline btn-sm" onClick={cargarLineas} id="btn-refresh-lineas">
+            <RefreshCw size={14} className={loading ? "spinning" : ""} />
+            Actualizar
+          </button>
+        }
       />
       <div className="page-content">
         {loading ? (
@@ -84,8 +92,14 @@ export default function LineasPage() {
                   </div>
                 </div>
                 
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button className="btn btn-outline btn-sm">Ver Detalle</button>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <button 
+                    className="btn btn-outline btn-sm" 
+                    onClick={() => setLineaSeleccionada(linea)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                  >
+                    <Info size={14} /> Ver Detalle
+                  </button>
                   <span className={`badge ${linea.estado ? 'badge-success' : 'badge-danger'}`}>
                     {linea.estado ? 'Activa' : 'Inactiva'}
                   </span>
@@ -95,6 +109,13 @@ export default function LineasPage() {
           </div>
         )}
       </div>
+
+      {lineaSeleccionada && (
+        <DetalleLineaModal 
+          linea={lineaSeleccionada} 
+          onClose={() => setLineaSeleccionada(null)} 
+        />
+      )}
     </>
   )
 }

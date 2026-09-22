@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from . import buses, lineas, paraderos, posiciones, simulacion, kpi, predicciones, unidades_funcionales, planning, trafico
+from . import buses, lineas, paraderos, posiciones, simulacion, kpi, predicciones, unidades_funcionales, planning, trafico, carga_buses
 
 router = APIRouter()
 
@@ -13,3 +13,4 @@ router.include_router(simulacion.router, prefix="/simulacion", tags=["Simulació
 router.include_router(kpi.router, prefix="/kpi", tags=["KPIs"])
 router.include_router(predicciones.router, prefix="/predicciones", tags=["Predicciones"])
 router.include_router(trafico.router, prefix="/trafico", tags=["Tráfico & What-If"])
+router.include_router(carga_buses.router, prefix="/carga-buses", tags=["Carga de Buses & Trayectos"])

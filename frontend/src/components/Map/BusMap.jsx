@@ -11,29 +11,63 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 })
 
-// Ícono personalizado para bus
-const crearIconoBus = (color = '#3b82f6', estado = 'activo') => {
-  const size = estado === 'bunching' ? 20 : 16
+// Ícono personalizado para bus con indicador numérico de carga de pasajeros
+const crearIconoBus = (color = '#3b82f6', estado = 'activo', pasajeros = null) => {
+  const size = estado === 'bunching' ? 22 : 18
+  
+  let badgeColor = '#64748b' // neutro
+  if (pasajeros !== null && pasajeros !== undefined) {
+    const num = Number(pasajeros) || 0
+    if (num >= 50) badgeColor = '#ef4444' // sobrecarga (rojo)
+    else if (num >= 35) badgeColor = '#f59e0b' // alta (ámbar)
+    else if (num >= 15) badgeColor = '#3b82f6' // media (azul)
+    else if (num > 0) badgeColor = '#10b981' // baja/normal (verde)
+  }
+
+  const badgeHtml = (pasajeros !== null && pasajeros !== undefined) ? `
+    <div style="
+      background: ${badgeColor};
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 0 4px;
+      border-radius: 9px;
+      border: 1.5px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+      margin-bottom: 2px;
+      letter-spacing: -0.5px;
+      min-width: 18px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+    ">${pasajeros}</div>
+  ` : ''
+
   return L.divIcon({
     html: `
-      <div style="
-        width: ${size}px;
-        height: ${size}px;
-        background: ${color};
-        border: 2px solid white;
-        border-radius: 4px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.5), 0 0 ${estado === 'bunching' ? '12px' : '6px'} ${color}60;
-        font-size: 9px;
-        color: white;
-        font-weight: bold;
-      ">🚌</div>
+      <div style="display: flex; flex-direction: column; align-items: center; pointer-events: auto;">
+        ${badgeHtml}
+        <div style="
+          width: ${size}px;
+          height: ${size}px;
+          background: ${color};
+          border: 2px solid white;
+          border-radius: 5px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.5), 0 0 ${estado === 'bunching' ? '12px' : '6px'} ${color}60;
+          font-size: 10px;
+          color: white;
+          font-weight: bold;
+        ">🚌</div>
+      </div>
     `,
     className: '',
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
+    iconSize: [32, 42],
+    iconAnchor: [16, 32],
   })
 }
 
@@ -267,27 +301,57 @@ export default function BusMap({
       {busPositions.map((bus) => {
         const bunching = bus.bunching || false
         const color = bunching ? '#f59e0b' : (bus.color || '#3b82f6')
+        const pax = bus.carga_actual ?? bus.pasajeros_levantados ?? bus.pasajeros_abordo ?? bus.carga_pasajeros
         return (
           <Marker
             key={`bus-${bus.id_bus}`}
             position={[bus.lat, bus.lon]}
-            icon={crearIconoBus(color, bunching ? 'bunching' : 'activo')}
+            icon={crearIconoBus(color, bunching ? 'bunching' : 'activo', pax)}
             eventHandlers={{ click: () => setSelectedBus(bus) }}
           >
             <Popup>
-              <div style={{ fontFamily: 'Inter, sans-serif', minWidth: 180 }}>
-                <div style={{ fontWeight: 700, marginBottom: 4 }}>
-                  🚌 Bus {bus.interno || bus.id_bus}
+              <div style={{ fontFamily: 'Inter, sans-serif', minWidth: 200 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>
+                    🚌 Bus {bus.interno || bus.id_bus}
+                  </div>
+                  {pax !== undefined && (
+                    <span style={{
+                      background: pax >= 45 ? '#ef4444' : pax >= 30 ? '#f59e0b' : '#10b981',
+                      color: 'white',
+                      fontSize: '0.75rem',
+                      fontWeight: 800,
+                      padding: '2px 7px',
+                      borderRadius: '10px'
+                    }}>
+                      {pax} pax
+                    </span>
+                  )}
                 </div>
-                {bus.placa && <div style={{ color: '#94a3b8', fontSize: 12 }}>Placa: {bus.placa}</div>}
-                <div style={{ color: '#94a3b8', fontSize: 12 }}>
-                  Vel: {bus.velocidad ?? bus.velocidad_kmh ?? '—'} km/h
-                </div>
-                {bus.pasajeros_abordo !== undefined && (
-                  <div style={{ color: '#94a3b8', fontSize: 12 }}>
-                    Pasajeros: {bus.pasajeros_abordo}
+                {bus.ruta_nombre && (
+                  <div style={{ color: '#60a5fa', fontSize: '0.75rem', fontWeight: 600, marginBottom: 2 }}>
+                    {bus.ruta_nombre}
                   </div>
                 )}
+                {bus.idrutaestacion && (
+                  <div style={{ color: '#94a3b8', fontSize: 12 }}>
+                    idrutaestacion: <strong style={{ color: 'white' }}>{bus.idrutaestacion}</strong> {bus.sentido ? `(${bus.sentido.toUpperCase()})` : ''}
+                  </div>
+                )}
+                {bus.origen && bus.destino && (
+                  <div style={{ color: '#cbd5e1', fontSize: 11, marginTop: 2 }}>
+                    📍 {bus.origen} ➔ {bus.destino}
+                  </div>
+                )}
+                {bus.id_trayecto && (
+                  <div style={{ color: '#c084fc', fontSize: 11, marginTop: 2 }}>
+                    Trayecto actual: <strong>{bus.id_trayecto}</strong>
+                  </div>
+                )}
+                {bus.placa && <div style={{ color: '#94a3b8', fontSize: 12 }}>Placa: {bus.placa}</div>}
+                <div style={{ color: '#94a3b8', fontSize: 12, marginTop: 2 }}>
+                  Vel: {bus.velocidad ?? bus.velocidad_kmh ?? '—'} km/h
+                </div>
                 {bunching && (
                   <div style={{ color: '#f59e0b', fontSize: 12, marginTop: 4, fontWeight: 600 }}>
                     ⚠ BUNCHING DETECTADO

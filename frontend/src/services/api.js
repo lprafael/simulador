@@ -83,6 +83,7 @@ export const prediccionesApi = {
 export const planningApi = {
   optimizarFlota: (id_linea, frecuencia) =>
     api.get(`/planning/optimizar-flota/${id_linea}`, { params: { frecuencia } }),
+  matrizOD: () => api.get('/planning/matriz-od'),
 }
 
 // ─── Tráfico y What-If ───
@@ -95,6 +96,13 @@ export const traficoApi = {
     api.get('/trafico/waze/live', { params: municipio ? { municipio } : {} }),
   guardarEscenario: (data) => api.post('/trafico/guardar-escenario', data),
   listarEscenarios: () => api.get('/trafico/escenarios'),
+}
+
+// ─── Carga de Buses & Trayectos (Control Cruzado) ───
+export const cargaBusesApi = {
+  analizar: (params = {}) => api.get('/carga-buses/analisis', { params }),
+  rutasCatalogo: () => api.get('/carga-buses/rutas-catalogo'),
+  busesActivos: () => api.get('/carga-buses/buses-activos'),
 }
 
 export default api

@@ -3,12 +3,13 @@ import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, Map, Activity, Play, Bus,
   Route, BarChart2, Settings, ChevronLeft, ChevronRight,
-  Zap, Radio, Database, ArrowLeftRight
+  Zap, Radio, Database, ArrowLeftRight, Users
 } from 'lucide-react'
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard', exact: true },
   { to: '/mapa', icon: Map, label: 'Mapa en Vivo' },
+  { to: '/carga-buses', icon: Users, label: 'Carga de Buses' },
   { to: '/trafico-whatif', icon: ArrowLeftRight, label: 'Tránsito & What-If' },
   { to: '/simulacion', icon: Play, label: 'Simulación TP' },
   { to: '/predicciones', icon: Zap, label: 'IA & Predicciones' },

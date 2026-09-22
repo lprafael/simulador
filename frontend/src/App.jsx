@@ -11,6 +11,7 @@ import LineasPage from './pages/LineasPage'
 import EventosPage from './pages/EventosPage'
 import SimulacionCargaUF from './pages/SimulacionCargaUF'
 import TraficoWhatIfPage from './pages/TraficoWhatIfPage'
+import CargaBusesPage from './pages/CargaBusesPage'
 import { useSimulacionStore, useBusStore } from './store'
 
 const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000'
@@ -123,6 +124,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/mapa" element={<MapaPage />} />
+            <Route path="/carga-buses" element={<CargaBusesPage />} />
             <Route path="/simulacion" element={<SimulacionPage />} />
             <Route path="/predicciones" element={<PrediccionesPage />} />
             <Route path="/kpis" element={<KpisPage />} />

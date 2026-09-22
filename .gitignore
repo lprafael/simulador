@@ -55,4 +55,5 @@ Thumbs.db
 
 # Logs & temporary files
 *.log
-scratch/out.txt
+scratch/
+backend/scratch/

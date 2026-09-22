@@ -102,8 +102,8 @@ def simular_carga_uf(
     - sep_entrada_min: separación mínima entre ingresos del mismo bus a la misma zona
     - ventana_val_min: ventana de validaciones previas al ingreso
     """
-    if not cid_db or not monitoreo_db or not billetaje_db:
-        raise HTTPException(status_code=503, detail="Una o más bases de datos no están disponibles")
+    if not cid_db or not monitoreo_db:
+        raise HTTPException(status_code=503, detail="Bases de datos de CID o Monitoreo no están disponibles")
 
     try:
         data = uf_analysis_service.get_simulation_data(

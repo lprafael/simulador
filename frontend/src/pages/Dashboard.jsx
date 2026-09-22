@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { RefreshCw, Activity, Bus, Zap, TrendingUp } from 'lucide-react'
 import Header from '../components/Layout/Header'
 import KpiCards from '../components/Dashboard/KpiCards'
@@ -62,7 +62,26 @@ export default function Dashboard() {
   const [chartData, setChartData] = useState([])
   const [eventosRecientes, setEventosRecientes] = useState([])
   
-  const { posicionesSimuladas, eventosSimulacion } = useSimulacionStore()
+  const { posicionesSimuladas, eventosSimulacion, wsConectado } = useSimulacionStore()
+  const posicionesRealtime = useBusStore((state) => state.posicionesRealtime)
+
+  const busesVisibles = useMemo(() => {
+    if (resultadosSim?.posiciones && resultadosSim.posiciones.length > 0) {
+      return buses
+    }
+    const realtimeList = Object.values(posicionesRealtime)
+    if (realtimeList.length > 0) {
+      return realtimeList.map(p => ({
+        id_bus: p.id_bus,
+        interno: p.interno || `BUS-${p.id_bus}`,
+        lat: p.lat,
+        lon: p.lon,
+        velocidad: p.velocidad || 25,
+        estado: p.estado || 'ACTIVO',
+      }))
+    }
+    return buses
+  }, [resultadosSim, buses, posicionesRealtime])
 
   const cargarKPIs = async () => {
     setLoading(true)
@@ -283,7 +302,7 @@ export default function Dashboard() {
             </div>
             <div style={{ height: 420 }}>
               <BusMap
-                buses={buses}
+                buses={busesVisibles}
                 rutaCoords={rutaGeoJSON}
                 paraderos={PARADEROS_DEMO}
                 height="420px"

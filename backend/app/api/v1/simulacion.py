@@ -35,6 +35,7 @@ def _construir_config_desde_db(
     # Obtener primera ruta de la línea
     ruta = db.query(Ruta).filter(Ruta.id_linea == params.id_linea).first()
     
+    paraderos = []
     if ruta:
         paraderos_db = (
             db.query(Paradero)
@@ -43,40 +44,41 @@ def _construir_config_desde_db(
             .order_by(Paradero.orden_ruta)
             .all()
         )
-        paraderos = [
-            ConfigParadero(
-                id_paradero=p.id_paradero,
-                nombre=p.nombre or f"Paradero {p.orden_ruta}",
-                orden=p.orden_ruta or i,
-                distancia_m=p.distancia_desde_inicio_m or (i * 800),
-                tasa_llegada_pax=params.tasa_pasajeros_por_min / max(len(paraderos_db), 1),
+        if len(paraderos_db) >= 2:
+            paraderos = [
+                ConfigParadero(
+                    id_paradero=p.id_paradero,
+                    nombre=p.nombre or f"Paradero {p.orden_ruta}",
+                    orden=p.orden_ruta or i,
+                    distancia_m=p.distancia_desde_inicio_m or (i * 800),
+                    tasa_llegada_pax=params.tasa_pasajeros_por_min / max(len(paraderos_db), 1),
+                )
+                for i, p in enumerate(paraderos_db)
+            ]
+            config_ruta = ConfigRuta(
+                id_ruta=ruta.id_ruta,
+                id_linea=params.id_linea,
+                nombre=ruta.nombre or linea.nombre_comercial or linea.numero_linea,
+                paraderos=paraderos,
+                distancia_total_km=ruta.distancia_km or 15.0,
             )
-            for i, p in enumerate(paraderos_db)
-        ]
-        
-        config_ruta = ConfigRuta(
-            id_ruta=ruta.id_ruta,
-            id_linea=params.id_linea,
-            nombre=ruta.nombre or linea.nombre_comercial or linea.numero_linea,
-            paraderos=paraderos,
-            distancia_total_km=ruta.distancia_km or 15.0,
-        )
-    else:
-        # Ruta de prueba si no hay datos reales
-        paraderos_default = [
-            ConfigParadero(id_paradero=1, nombre="Terminal Norte", orden=0, distancia_m=0, tipo="INICIO", tasa_llegada_pax=0.5),
-            ConfigParadero(id_paradero=2, nombre="Plaza Central", orden=1, distancia_m=2500, tasa_llegada_pax=1.5),
-            ConfigParadero(id_paradero=3, nombre="Mercado", orden=2, distancia_m=5000, tasa_llegada_pax=2.0),
-            ConfigParadero(id_paradero=4, nombre="Hospital", orden=3, distancia_m=7500, tasa_llegada_pax=1.0),
-            ConfigParadero(id_paradero=5, nombre="Universidad", orden=4, distancia_m=10000, tasa_llegada_pax=1.8),
-            ConfigParadero(id_paradero=6, nombre="Terminal Sur", orden=5, distancia_m=12000, tasa_llegada_pax=0.3),
+            
+    if not paraderos:
+        # Corredor troncal estándar Asunción si no hay paraderos registrados para esta variante
+        paraderos = [
+            ConfigParadero(id_paradero=1, nombre="Terminal Fernando de la Mora", orden=0, distancia_m=0, tipo="INICIO", tasa_llegada_pax=0.8),
+            ConfigParadero(id_paradero=2, nombre="Avda. Mcal. López y Madame Lynch", orden=1, distancia_m=2200, tasa_llegada_pax=1.5),
+            ConfigParadero(id_paradero=3, nombre="Cruce Eusebio Ayala", orden=2, distancia_m=4100, tasa_llegada_pax=2.0),
+            ConfigParadero(id_paradero=4, nombre="Mercado 4", orden=3, distancia_m=6800, tasa_llegada_pax=2.5),
+            ConfigParadero(id_paradero=5, nombre="Plaza de los Héroes / Microcentro", orden=4, distancia_m=8900, tasa_llegada_pax=1.8),
+            ConfigParadero(id_paradero=6, nombre="Terminal Ómnibus Asunción", orden=5, distancia_m=11500, tasa_llegada_pax=0.5),
         ]
         config_ruta = ConfigRuta(
-            id_ruta=0,
+            id_ruta=ruta.id_ruta if ruta else 0,
             id_linea=params.id_linea,
             nombre=linea.nombre_comercial or linea.numero_linea,
-            paraderos=paraderos_default,
-            distancia_total_km=12.0,
+            paraderos=paraderos,
+            distancia_total_km=11.5,
         )
     
     return ConfigSimulacion(

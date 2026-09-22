@@ -12,9 +12,9 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # External Databases
-cid_engine = create_engine(settings.CID_DB_URL, pool_pre_ping=True) if settings.CID_DB_URL else None
-monitoreo_engine = create_engine(settings.MONITOREO_DB_URL, pool_pre_ping=True) if settings.MONITOREO_DB_URL else None
-billetaje_engine = create_engine(settings.BILLETAJE_DB_URL, pool_pre_ping=True) if settings.BILLETAJE_DB_URL else None
+cid_engine = create_engine(settings.CID_DB_URL, pool_pre_ping=True, connect_args={"connect_timeout": 5}) if settings.CID_DB_URL else None
+monitoreo_engine = create_engine(settings.MONITOREO_DB_URL, pool_pre_ping=True, connect_args={"connect_timeout": 5}) if settings.MONITOREO_DB_URL else None
+billetaje_engine = create_engine(settings.BILLETAJE_DB_URL, pool_pre_ping=False, connect_args={"connect_timeout": 2}) if settings.BILLETAJE_DB_URL else None
 
 Base = declarative_base()
 
@@ -26,7 +26,9 @@ def get_db():
         db.close()
 
 def get_cid_db():
-    if not cid_engine: return None
+    if not cid_engine:
+        yield None
+        return
     db = sessionmaker(autocommit=False, autoflush=False, bind=cid_engine)()
     try:
         yield db
@@ -34,7 +36,9 @@ def get_cid_db():
         db.close()
 
 def get_monitoreo_db():
-    if not monitoreo_engine: return None
+    if not monitoreo_engine:
+        yield None
+        return
     db = sessionmaker(autocommit=False, autoflush=False, bind=monitoreo_engine)()
     try:
         yield db
@@ -42,7 +46,9 @@ def get_monitoreo_db():
         db.close()
 
 def get_billetaje_db():
-    if not billetaje_engine: return None
+    if not billetaje_engine:
+        yield None
+        return
     db = sessionmaker(autocommit=False, autoflush=False, bind=billetaje_engine)()
     try:
         yield db

@@ -183,8 +183,11 @@ class BilletajeService:
             }).fetchall()
             return [dict(r._asdict()) for r in result]
         except Exception as e:
-            logger.error(f"Error en get_batch_validations: {e}")
-            billetaje_db.rollback()
+            logger.warning(f"Error en get_batch_validations (fallback activo): {e}")
+            try:
+                billetaje_db.rollback()
+            except Exception:
+                pass
             return []
 
     def get_buses_count(self, billetaje_db: Session, ruta_id: int, fecha: datetime.date, hora: int) -> int:
@@ -214,8 +217,11 @@ class BilletajeService:
             }).fetchone()
             return result[0] if result else 0
         except Exception as e:
-            logger.error(f"Error consultando buses en billetaje para ruta {ruta_id}: {e}")
-            billetaje_db.rollback()
+            logger.warning(f"Error consultando buses en billetaje para ruta {ruta_id}: {e}")
+            try:
+                billetaje_db.rollback()
+            except Exception:
+                pass
             return 0
 
 billetaje_service = BilletajeService()

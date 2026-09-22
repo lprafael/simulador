@@ -19,10 +19,10 @@ def kpi_resumen_general(db: Session = Depends(get_db)):
     total_lineas = db.query(Linea).filter(Linea.estado == True).count()
     total_simulaciones = db.query(Simulacion).count()
     
-    # Última simulación completada
+    # Última simulación con resultados
     ultima_sim = (
         db.query(Simulacion)
-        .filter(Simulacion.estado == "COMPLETADO")
+        .filter(Simulacion.resultado_resumen.isnot(None))
         .order_by(desc(Simulacion.creado_en))
         .first()
     )
@@ -95,11 +95,11 @@ def eventos_recientes(
 @router.get("/headway/{id_linea}")
 def kpi_headway(id_linea: int, db: Session = Depends(get_db)):
     """KPI de headway para una línea."""
-    # Buscar en última simulación de la línea
+    # Buscar en última simulación de la línea con resultados
     ultima_sim = (
         db.query(Simulacion)
         .filter(Simulacion.id_linea == id_linea)
-        .filter(Simulacion.estado == "COMPLETADO")
+        .filter(Simulacion.resultado_resumen.isnot(None))
         .order_by(desc(Simulacion.creado_en))
         .first()
     )

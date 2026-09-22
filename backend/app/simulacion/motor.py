@@ -182,6 +182,8 @@ class MotorSimulacion:
         estado = self.buses[id_bus]
         paraderos = self.config.ruta.paraderos
         num_paraderos = len(paraderos)
+        if num_paraderos < 2:
+            return
         
         while True:
             # Recorrer todos los paraderos de la ruta
